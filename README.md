@@ -22,7 +22,7 @@ cd app
 npm install
 
 # start the dev server
-npm start
+npm run dev
 ```
 
 Open [http://localhost:8080](http://localhost:8080) in your browser.

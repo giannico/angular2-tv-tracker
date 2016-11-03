@@ -1,71 +1,84 @@
-// Helper: root() is defined at the bottom
 var path = require('path');
+var fs = require('fs');
 var webpack = require('webpack');
 
-// Webpack Plugins
-var CommonsChunkPlugin = webpack.optimize.CommonsChunkPlugin;
-var autoprefixer = require('autoprefixer');
-var HtmlWebpackPlugin = require('html-webpack-plugin');
-var ExtractTextPlugin = require('extract-text-webpack-plugin');
-var CopyWebpackPlugin = require('copy-webpack-plugin');
-var AssetsPlugin = require('assets-webpack-plugin');
 var DllReferencePlugin = webpack.DllReferencePlugin;
+var AssetsPlugin = require('assets-webpack-plugin');
+var ExtractTextPlugin = require('extract-text-webpack-plugin');
+var HtmlWebpackPlugin = require('html-webpack-plugin');
+var CopyWebpackPlugin = require('copy-webpack-plugin');
+var AddAssetHtmlPlugin = require('add-asset-html-webpack-plugin');
 
-/**
- * Env
- * Get npm lifecycle event to identify the environment
- */
-var ENV = process.env.npm_lifecycle_event;
-var isProd = ENV === 'build';
+var autoprefixer = require('autoprefixer');
 
-module.exports = function makeWebpackConfig() {
-  /**
-   * Config
-   * Reference: http://webpack.github.io/docs/configuration.html
-   * This is the object where all configuration gets set
-   */
+// the dll file exposes functions for retrieving the list of imported libraries that we want to
+// include in our generated DLL files
+var dll = require('./dll.js');
+
+////////////////////
+
+// TODO - Awesome TypeScript Loader
+// look at tsconfig.json
+// look at aliases below
+// look at corejs imports
+// look at tslint integration
+// lock dependencies
+// check cross-platform
+// convert webpack config to TS?
+
+module.exports = getWebpackConfig(getOptions(process.env));
+
+function getOptions(environment) {
+  var nodeEnv = environment.NODE_ENV || 'dev'; // build or dev (default)
+  var isDevMode = nodeEnv === 'dev';
+  var isBuildMode = nodeEnv === 'build';
+
+  return {
+    nodeEnv: nodeEnv,
+    port: 8080,
+    isDevMode: isDevMode,
+    isBuildMode: isBuildMode
+  };
+}
+
+////////////////////
+
+function getWebpackConfig(options) {
+  // validate application DLLs exists, they should be in place before this application build
+  // takes place
+  validateDLLManifest();
+
+  var webpackDllAssets = require('./dist/webpack-dll-assets.json');
+
+  // create an empty webpack configuration object that we will tack all configuration onto
   var config = {};
 
-  /**
-   * Devtool
-   * Reference: http://webpack.github.io/docs/configuration.html#devtool
-   * Type of sourcemap to use per build type
-   */
-  if (isProd) {
+  // generate cheaper (faster) source maps while we're in the process of developing
+  if (options.isBuildMode) {
     config.devtool = 'source-map';
   } else {
-    // config.devtool = 'eval-source-map';
+    config.devtool = 'eval-source-map';
   }
 
-  // add debug messages
-  config.debug = !isProd;
+  // add webpack debug messages
+  config.debug = options.isDevMode;
 
-  const DLL = require(root('./src/dll'));
-  const polyfills = DLL.polyfills();
-
-  /**
-   * Entry
-   * Reference: http://webpack.github.io/docs/configuration.html#entry
-   */
+  // files to be built, one "main" output bundle in this case
+  // the application requires that the polyfills DLL be loaded first, so the list of all
+  // applocation polyfills are included before the actual application file
   config.entry = {
     // order matters here, polyfills have to run first
-    main: [].concat(polyfills, './src/main.ts')
+    main: [].concat(dll.polyfills(), './src/main.ts')
   };
 
-  /**
-   * Output
-   * Reference: http://webpack.github.io/docs/configuration.html#output
-   */
+  // output path and naming for the generated application file, using hashing for long-term caching
   config.output = {
     path: root('dist'),
-    publicPath: isProd ? '/' : 'http://localhost:8080/',
-    filename: 'js/[name].js'
+    publicPath: '',
+    filename: 'js/[name].[hash].js'
   };
 
-  /**
-   * Resolve
-   * Reference: http://webpack.github.io/docs/configuration.html#resolve
-   */
+  // register the types of files that webpack will resolve/load
   config.resolve = {
     root: root(),
     // only discover files that have those extensions
@@ -76,139 +89,170 @@ module.exports = function makeWebpackConfig() {
     }
   };
 
-  /**
-   * Loaders
-   * Reference: http://webpack.github.io/docs/configuration.html#module-loaders
-   * List: http://webpack.github.io/docs/list-of-loaders.html
-   * This handles most of the magic responsible for converting modules
-   */
+  ////////////////////////////////////////
+  //// Loaders
+  ////////////////////////////////////////
+
   config.module = {
-    preLoaders: [{ test: /\.ts$/, loader: 'tslint' }],
     loaders: [
-      // Support for .ts files.
+      // register TypeScript and angular2-template-loader for inlining component templates/styles
       {
         test: /\.ts$/,
         loaders: ['ts', 'angular2-template-loader'],
         exclude: [/\.(spec|e2e)\.ts$/, /node_modules\/(?!(ng2-.+))/]
       },
 
-      // copy those assets to output
+      // file-loader reads imported fonts/images and copys and tags them with a hash
+      // TODO: revisit this output when app has actual images (dont put images in fonts?)
       {
         test: /\.(png|jpe?g|gif|svg|woff|woff2|ttf|eot|ico)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
-        loader: 'file?name=fonts/[name].[ext]?'
+        loader: 'file?name=fonts/[name].[hash].[ext]?'
       },
 
-      // Support for *.json files.
+      // support for *.json files.
       { test: /\.json$/, loader: 'json' },
 
-      // Support for CSS as raw text
-      // all css in src/style will be bundled in an external css file
+      // extract content of application css files, apply vendor prefixes, generate a sourcemap
+      // Angular2 inline css files are excluded
+      // TODO: revisit this in the context of angular2 component styling, may not even be needed
       {
         test: /\.css$/,
         exclude: root('src', 'app'),
         loader: ExtractTextPlugin.extract('style', 'css?sourceMap!postcss')
       },
-      // all css required in src/app files will be merged in js files
-      { test: /\.css$/, include: root('src', 'app'), loader: 'raw!postcss' },
 
-      // support for .html as raw text
-      // todo: change the loader to something that adds a hash to images
-      { test: /\.html$/, loader: 'raw', exclude: root('src', 'public') }
-    ],
-    postLoaders: []
+      //////////////////////////////////////////////////////////////////////////////////////////////
+      //// angular2-template-loader prerequisites
+      ////
+      //// To be able to use the template loader you must have loaders registered, which can
+      //// handle .html and .css files. The following loaders are for inlining Angular2
+      //// component stylesheets and templates.
+      //////////////////////////////////////////////////////////////////////////////////////////////
+
+      {
+        test: /\.css$/,
+        include: root('src', 'app'),
+        loader: 'raw!postcss' // vendor prefixes are also applied during this process
+      },
+
+      {
+        test: /\.html$/,
+        loader: 'raw', exclude: root('src', 'public')
+      }
+    ]
+    // postLoaders: [
+    //   // run tslint on the application files after each rebuild
+    //   {
+    //     test: /\.ts$/,
+    //     loader: 'tslint'
+    //   }
+    // ]
   };
 
-  /**
-   * Plugins
-   * Reference: http://webpack.github.io/docs/configuration.html#plugins
-   * List: http://webpack.github.io/docs/list-of-plugins.html
-   */
   config.plugins = [
+    // only emit outputs if there are no errors
+    new webpack.NoErrorsPlugin(),
+
+    // register the ExtractTextPlugin to define the name of the extracted css file
+    // see loader above for more details
+    new ExtractTextPlugin('css/[name].[contenthash].css'),
+
+    // create a manifest of all application assets created by webpack for the "main" entry
     new AssetsPlugin({
       path: root('dist'),
-      filename: 'webpack-assets.json',
+      filename: 'webpack-main-assets.json',
       prettyPrint: true
     }),
+
+    // registers the polyfills/vendor DLLs that have been generated from webpack.dll.config.js
     new DllReferencePlugin({
-      context: '.',
+      context: root(),
       manifest: require('./dist/vendor.manifest.json'),
     }),
     new DllReferencePlugin({
-      context: '.',
+      context: root(),
       manifest: require('./dist/polyfills.manifest.json'),
     }),
 
-    // Define env variables to help with builds
-    // Reference: https://webpack.github.io/docs/list-of-plugins.html#defineplugin
-    new webpack.DefinePlugin({
-      // Environment helpers
-      'process.env': {
-        ENV: JSON.stringify(ENV)
+    // register the files from the DLL manifest, to be added to index.html as script/style tags
+    new AddAssetHtmlPlugin([
+      {
+        filepath: root('dist', webpackDllAssets.vendor.css),
+        includeSourcemap: false,
+        publicPath: 'css',
+        outputPath: 'css',
+        typeOfAsset: 'css'
+      },
+      {
+        filepath: root('dist', webpackDllAssets.polyfills.js),
+        includeSourcemap: false,
+        publicPath: 'js',
+        outputPath: 'js',
+        typeOfAsset: 'js'
+      },
+      {
+        filepath: root('dist', webpackDllAssets.vendor.js),
+        includeSourcemap: false,
+        publicPath: 'js',
+        outputPath: 'js',
+        typeOfAsset: 'js'
       }
+    ]),
+
+    // inject the generated/registered scripts/css files into the index file (main and DLLs)
+    new HtmlWebpackPlugin({
+      template: './src/public/index.html'
     }),
 
-    // Inject script and link tags into html files
-    // Reference: https://github.com/ampedandwired/html-webpack-plugin
-    // new HtmlWebpackPlugin({
-    //   template: './src/public/index.html',
-    //   chunksSortMode: 'dependency'
-    // }),
+    // always minify the application code, in order to catch any minification issues during
+    // development. Sourcemaps will be generated to assist with debugging
+    new webpack.optimize.UglifyJsPlugin({ mangle: { keep_fnames: true } }),
 
-    // Extract css files
-    // Reference: https://github.com/webpack/extract-text-webpack-plugin
-    new ExtractTextPlugin('css/[name].css'),
-
-    // Reference: http://webpack.github.io/docs/list-of-plugins.html#noerrorsplugin
-    // Only emit files when there are no errors
-    new webpack.NoErrorsPlugin(),
-
-    // Reference: http://webpack.github.io/docs/list-of-plugins.html#uglifyjsplugin
-    // Minify all javascript, switch loaders to minimizing mode
-    // new webpack.optimize.UglifyJsPlugin({ mangle: { keep_fnames: true } }),
-
-    // Copy assets from the public folder
-    // Reference: https://github.com/kevlened/copy-webpack-plugin
+    // copy app application assets that exist in the application public folder
     new CopyWebpackPlugin([{
       from: root('src/public')
     }])
   ];
 
-  /**
-   * PostCSS
-   * Reference: https://github.com/postcss/autoprefixer-core
-   * Add vendor prefixes to your css
-   */
+  ////////////////////////////////////////
+  //// Plugin Configuration
+  ////////////////////////////////////////
+
+  // register the configuration for the browser autoprefixing
   config.postcss = [
     autoprefixer({
       browsers: ['last 2 version']
     })
   ];
 
-  /**
-   * Apply the tslint loader as pre/postLoader
-   * Reference: https://github.com/wbuchwalter/tslint-loader
-   */
   config.tslint = {
     emitErrors: false,
     failOnHint: false
   };
 
-  /**
-   * Dev server configuration
-   * Reference: http://webpack.github.io/docs/configuration.html#devserver
-   * Reference: http://webpack.github.io/docs/webpack-dev-server.html
-   */
   config.devServer = {
-    contentBase: ['./src/public', './dist'],
+    // serve files from both /src/public and dist folder
+    contentBase: ['./dist'],
     historyApiFallback: true,
     quiet: true,
+    port: options.port,
     stats: 'minimal', // none (or false), errors-only, minimal, normal (or true) and verbose
   };
 
   return config;
-} ();
+}
 
-// Helper functions
+////////////////////////////////////////
+//// Helpers
+////////////////////////////////////////
+
+function validateDLLManifest() {
+  var path = root('dist', 'webpack-dll-assets.json');
+  // throws an error if the path doesn't exist
+  fs.accessSync(path);
+}
+
+// Helper functions for forming paths from the root folder
 function root(args) {
   args = Array.prototype.slice.call(arguments, 0);
   return path.join.apply(path, [__dirname].concat(args));

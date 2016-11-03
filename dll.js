@@ -1,6 +1,10 @@
-////////////////////////////////////////
-//// IMPORTANT:  any changes to this file and you have to run `npm run dll` to generate the bundle
-////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//// IMPORTANT: Any time changes are made to this file, the application DLLs need to be regenerated
+////
+//// * Run npm run dll:dev, or npm run clean and then restart development (npm run dev)
+//// * The DLLs are also regenerated each time npm run build is executed.
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 exports.polyfills = function(env) {
     var polyfills = [
         'core-js/client/shim',
@@ -17,7 +21,6 @@ exports.polyfills = function(env) {
     return polyfills;
 };
 
-// external vendor files
 exports.vendor = function(env) {
     return [
         // angular libraries
