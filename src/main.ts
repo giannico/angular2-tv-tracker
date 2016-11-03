@@ -1,5 +1,3 @@
-/// <reference path="../node_modules/firebase/firebase.d.ts" />
-// Notes: https://github.com/angular/angularfire2/issues/525
 import { enableProdMode } from '@angular/core';
 import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
 import { AppModule } from './app/app.module';
