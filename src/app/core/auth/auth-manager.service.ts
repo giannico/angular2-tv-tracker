@@ -86,6 +86,10 @@ export class AuthManager {
     return this.af.auth.logout();
   }
 
+  forgotPassword(email: string): Promise<any> {
+    return firebase.auth().sendPasswordResetEmail(email);
+  }
+
   updateName(name: string): Promise<any> {
     return this.user.updateProfile(name);
   }
