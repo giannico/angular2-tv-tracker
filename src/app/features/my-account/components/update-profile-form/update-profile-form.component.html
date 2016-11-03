@@ -1,0 +1,16 @@
+<form #myProfileForm="ngForm"
+    (ngSubmit)="submitHandler(formData)">
+
+    <div class="form-group">
+        <label for="nameInput">Name</label>
+
+        <input id="nameInput" type="text" name="name"
+            class="form-control" placeholder="Name"
+            [(ngModel)]="formData.name"
+            required>
+    </div>
+
+    <button class="btn btn-primary" type="submit"
+        [disabled]="!myProfileForm.form.valid">Update Profile</button>
+
+</form>

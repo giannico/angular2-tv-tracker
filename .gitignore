@@ -1,0 +1,28 @@
+# OS
+# ======================
+.DS_Store
+Thumbs.db
+
+# Dependencies
+# ======================
+node_modules/
+
+# General
+# ======================
+.tmp/
+dist/
+build/
+*.log
+*.csv
+*.dat
+*.out
+*.pid
+*.gz
+*.tmp
+*.bak
+*.swp
+
+# Firebase
+# ======================
+
+.firebaserc

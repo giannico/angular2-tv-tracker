@@ -1,0 +1,21 @@
+<div class="thumbnail">
+  <img *ngIf="item?.image?.medium"
+    [src]="item?.image?.medium"
+    [alt]="item.name" [title]="item.name">
+
+  <img *ngIf="!item?.image?.medium"
+    src="https://placehold.it/210x295?text=No Image Available"
+    [alt]="item.name" [title]="item.name">
+
+  <div class="caption" showAuth>
+
+    <button *ngIf="isOn && onButtonLabel"
+      class="btn btn-primary btn-block btn-success"
+      (click)="toggleOffHandler(item)">{{onButtonLabel}}</button>
+
+    <button *ngIf="!isOn && offButtonLabel"
+      class="btn btn-primary btn-block"
+      (click)="toggleOnHandler(item)">{{offButtonLabel}}</button>
+
+    </div>
+</div>

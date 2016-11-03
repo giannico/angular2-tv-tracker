@@ -1,0 +1,35 @@
+<nav class="shows-nav">
+
+	<ul class="nav nav-pills">
+
+		<li role="presentation"
+      *ngIf="showAllShowsLink"
+      routerLinkActive="active"
+      [routerLinkActiveOptions]="{exact: true}">
+			<a routerLink="/shows" [queryParams]="{ pageNum: 1 }">Shows</a>
+		</li>
+
+		<li
+      role="presentation"
+      *ngIf="showMyFavoritesLink"
+      routerLinkActive="active"
+      [routerLinkActiveOptions]="{exact: true}">
+			<a routerLink="/my-favorite-shows">
+        My Favorites <span class="badge">{{favoriteShowCount}}</span>
+      </a>
+		</li>
+
+		<ul class="pager pull-right" *ngIf="showPager">
+			<li class="next">
+				<a routerLink="." [queryParams]="{ pageNum: pageNum + 1 }">
+          Next <span aria-hidden="true">&rarr;</span>
+        </a>
+			</li>
+			<li class="previous" [hidden]="pageNum <= 1">
+				<a routerLink="." [queryParams]="{ pageNum: pageNum - 1 }">
+					<span aria-hidden="true">&larr;</span> Previous
+				</a>
+			</li>
+		</ul>
+	</ul>
+</nav>

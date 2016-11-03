@@ -1,0 +1,19 @@
+<form #myEmailForm="ngForm"
+    (ngSubmit)="submitHandler(formData)">
+
+    <div class="form-group">
+        <label for="emailInput">Email</label>
+
+        <input id="emailInput" type="text" name="email"
+            class="form-control" placeholder="Email"
+            [(ngModel)]="formData.email"
+            required>
+    </div>
+
+    <div class="alert alert-danger" role="alert"
+        *ngIf="errorMessage">{{errorMessage}}</div>
+
+    <button class="btn btn-primary" type="submit"
+        [disabled]="!myEmailForm.form.valid">Update Email</button>
+
+</form>

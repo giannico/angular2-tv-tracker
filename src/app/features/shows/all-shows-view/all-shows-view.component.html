@@ -1,0 +1,22 @@
+<show-nav-bar
+  [pageNum]="pageNum$ | async"
+  [favoriteShowCount]="(favoriteShows$ | async)?.length"
+  showPager="true"
+  showAllShowsLink="true"
+  [showMyFavoritesLink]="authManager.isAuthenticated()"></show-nav-bar>
+
+<div class="alert alert-info" hideAuth>
+  <strong><a routerLink="/log-in">Log In now!</a></strong> Start tracking your favorite shows.
+</div>
+
+<div *ngFor="let show of (shows$ | async)"
+  class="col-xs-6 col-md-3">
+
+  <show-tile [item]="show"
+    onButtonLabel="Favorite"
+    offButtonLabel="Mark as Favorite"
+    [isOn]="show.derivedData.isFavorite"
+    (toggleOn)="addShowToFavorites(show)"
+    (toggleOff)="removeShowFromFavorites(show)"></show-tile>
+
+</div>

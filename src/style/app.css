@@ -1,0 +1,15 @@
+.navbar-static-top {
+  margin-bottom: 19px;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+nav .pager {
+  margin: 0px
+}
+
+.shows-nav {
+  margin-bottom: 10px;
+}

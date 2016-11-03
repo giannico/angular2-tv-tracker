@@ -1,0 +1,19 @@
+<show-nav-bar
+  [favoriteShowCount]="(favoriteShows$ | async)?.length"
+  showAllShowsLink="true"
+  showMyFavoritesLink="true"></show-nav-bar>
+
+<div class="alert alert-info" *ngIf="(favoriteShows$ | async)?.length === 0">
+  <strong>You don't have any favorites!</strong> What are you waiting for?
+</div>
+
+<div *ngFor="let show of (favoriteShows$ | async)"
+  class="col-xs-6 col-md-3">
+
+    <!-- all shows are a favorite -->
+  <show-tile [item]="show"
+    onButtonLabel="Remove Favorite"
+    isOn="true"
+    (toggleOff)="removeShowFromFavorites(show)"></show-tile>
+
+</div>
