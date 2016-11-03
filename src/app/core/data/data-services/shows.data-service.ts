@@ -1,5 +1,9 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
+import 'rxjs/add/operator/bufferCount';
+import 'rxjs/add/operator/switchMap';
+import 'rxjs/add/observable/combineLatest';
+
 import { AngularFire } from 'angularfire2';
 
 import { DataService } from './data-service';

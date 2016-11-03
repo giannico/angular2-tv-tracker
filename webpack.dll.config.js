@@ -3,13 +3,12 @@ var path = require('path');
 var webpack = require('webpack');
 
 // Webpack Plugins
-var CommonsChunkPlugin = webpack.optimize.CommonsChunkPlugin;
 var autoprefixer = require('autoprefixer');
-var HtmlWebpackPlugin = require('html-webpack-plugin');
-var ExtractTextPlugin = require('extract-text-webpack-plugin');
-var CopyWebpackPlugin = require('copy-webpack-plugin');
 var AssetsPlugin = require('assets-webpack-plugin');
-var DllReferencePlugin = webpack.DllReferencePlugin;
+
+var ExtractTextPlugin = require('extract-text-webpack-plugin');
+
+var dll = require('./src/dll.js');
 
 /**
  * Env
@@ -40,16 +39,13 @@ module.exports = function makeWebpackConfig() {
   // add debug messages
   config.debug = !isProd;
 
-  const DLL = require(root('./src/dll'));
-  const polyfills = DLL.polyfills();
-
   /**
    * Entry
    * Reference: http://webpack.github.io/docs/configuration.html#entry
    */
   config.entry = {
-    // order matters here, polyfills have to run first
-    main: [].concat(polyfills, './src/main.ts')
+    polyfills: dll.polyfills(),
+    vendor: dll.vendor()
   };
 
   /**
@@ -58,8 +54,8 @@ module.exports = function makeWebpackConfig() {
    */
   config.output = {
     path: root('dist'),
-    publicPath: isProd ? '/' : 'http://localhost:8080/',
-    filename: 'js/[name].js'
+    filename: 'js/[name].js',
+    library: '[name]_lib'
   };
 
   /**
@@ -69,11 +65,7 @@ module.exports = function makeWebpackConfig() {
   config.resolve = {
     root: root(),
     // only discover files that have those extensions
-    extensions: ['', '.ts', '.js', '.json', '.css', '.html'],
-    alias: {
-      'app': 'src/app',
-      'common': 'src/common'
-    }
+    extensions: ['', '.ts', '.js', '.json', '.css', '.html']
   };
 
   /**
@@ -83,7 +75,6 @@ module.exports = function makeWebpackConfig() {
    * This handles most of the magic responsible for converting modules
    */
   config.module = {
-    preLoaders: [{ test: /\.ts$/, loader: 'tslint' }],
     loaders: [
       // Support for .ts files.
       {
@@ -99,7 +90,7 @@ module.exports = function makeWebpackConfig() {
       },
 
       // Support for *.json files.
-      { test: /\.json$/, loader: 'json' },
+      {test: /\.json$/, loader: 'json'},
 
       // Support for CSS as raw text
       // all css in src/style will be bundled in an external css file
@@ -109,11 +100,11 @@ module.exports = function makeWebpackConfig() {
         loader: ExtractTextPlugin.extract('style', 'css?sourceMap!postcss')
       },
       // all css required in src/app files will be merged in js files
-      { test: /\.css$/, include: root('src', 'app'), loader: 'raw!postcss' },
+      {test: /\.css$/, include: root('src', 'app'), loader: 'raw!postcss'},
 
       // support for .html as raw text
       // todo: change the loader to something that adds a hash to images
-      { test: /\.html$/, loader: 'raw', exclude: root('src', 'public') }
+      {test: /\.html$/, loader: 'raw',  exclude: root('src', 'public')}
     ],
     postLoaders: []
   };
@@ -129,48 +120,20 @@ module.exports = function makeWebpackConfig() {
       filename: 'webpack-assets.json',
       prettyPrint: true
     }),
-    new DllReferencePlugin({
-      context: '.',
-      manifest: require('./dist/vendor.manifest.json'),
-    }),
-    new DllReferencePlugin({
-      context: '.',
-      manifest: require('./dist/polyfills.manifest.json'),
-    }),
 
-    // Define env variables to help with builds
-    // Reference: https://webpack.github.io/docs/list-of-plugins.html#defineplugin
-    new webpack.DefinePlugin({
-      // Environment helpers
-      'process.env': {
-        ENV: JSON.stringify(ENV)
-      }
+    new webpack.DllPlugin({
+      name: '[name]_lib',
+      path: root('dist', '[name].manifest.json')
     }),
-
-    // Inject script and link tags into html files
-    // Reference: https://github.com/ampedandwired/html-webpack-plugin
-    // new HtmlWebpackPlugin({
-    //   template: './src/public/index.html',
-    //   chunksSortMode: 'dependency'
-    // }),
 
     // Extract css files
-    // Reference: https://github.com/webpack/extract-text-webpack-plugin
     new ExtractTextPlugin('css/[name].css'),
 
-    // Reference: http://webpack.github.io/docs/list-of-plugins.html#noerrorsplugin
     // Only emit files when there are no errors
     new webpack.NoErrorsPlugin(),
 
-    // Reference: http://webpack.github.io/docs/list-of-plugins.html#uglifyjsplugin
-    // Minify all javascript, switch loaders to minimizing mode
-    // new webpack.optimize.UglifyJsPlugin({ mangle: { keep_fnames: true } }),
-
-    // Copy assets from the public folder
-    // Reference: https://github.com/kevlened/copy-webpack-plugin
-    new CopyWebpackPlugin([{
-      from: root('src/public')
-    }])
+    // minify output
+    // new webpack.optimize.UglifyJsPlugin({mangle: { keep_fnames: true }})
   ];
 
   /**
@@ -184,29 +147,8 @@ module.exports = function makeWebpackConfig() {
     })
   ];
 
-  /**
-   * Apply the tslint loader as pre/postLoader
-   * Reference: https://github.com/wbuchwalter/tslint-loader
-   */
-  config.tslint = {
-    emitErrors: false,
-    failOnHint: false
-  };
-
-  /**
-   * Dev server configuration
-   * Reference: http://webpack.github.io/docs/configuration.html#devserver
-   * Reference: http://webpack.github.io/docs/webpack-dev-server.html
-   */
-  config.devServer = {
-    contentBase: ['./src/public', './dist'],
-    historyApiFallback: true,
-    quiet: true,
-    stats: 'minimal', // none (or false), errors-only, minimal, normal (or true) and verbose
-  };
-
   return config;
-} ();
+}();
 
 // Helper functions
 function root(args) {
