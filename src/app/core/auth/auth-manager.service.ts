@@ -39,7 +39,6 @@ export class AuthManager {
         if (authState == null) { return null; }
 
         const user: firebase.User = authState.auth;
-        console.log(user);
         return new AuthUser(user);
       })
       .cache();
@@ -95,7 +94,6 @@ export class AuthManager {
   }
 
   updateEmail(email: string): Promise<any> {
-    console.log('Updating email to %s', email);
     return this.user.updateEmail(email);
   }
 

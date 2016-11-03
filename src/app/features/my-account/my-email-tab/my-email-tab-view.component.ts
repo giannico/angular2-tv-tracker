@@ -23,7 +23,6 @@ export class MyEmailTabViewComponent {
         this.authManager.updateEmail($event.email)
             .then(() => { this.notifier.success('Profile successfully updated.'); })
             .catch((error) => {
-                console.log(error);
                 this.errorMessage = error.message;
                 this.notifier.error('An error occurred while updating the email.');
             });
