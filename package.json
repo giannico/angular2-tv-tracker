@@ -68,5 +68,16 @@
     "typescript": "^2.0.3",
     "webpack": "^1.13.2",
     "webpack-dev-server": "^1.16.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/giannico/angular2-tv-tracker.git"
+  },
+  "bugs": {
+    "url": "https://github.com/giannico/angular2-tv-tracker/issues"
+  },
+  "engines": {
+    "node": ">= 4.2.1",
+    "npm": ">= 3"
   }
 }
