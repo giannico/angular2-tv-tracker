@@ -180,21 +180,18 @@ function getWebpackConfig(options) {
         filepath: root('dist', webpackDllAssets.vendor.css),
         includeSourcemap: false,
         publicPath: 'css',
-        outputPath: 'css',
         typeOfAsset: 'css'
       },
       {
         filepath: root('dist', webpackDllAssets.polyfills.js),
         includeSourcemap: false,
         publicPath: 'js',
-        outputPath: 'js',
         typeOfAsset: 'js'
       },
       {
         filepath: root('dist', webpackDllAssets.vendor.js),
         includeSourcemap: false,
         publicPath: 'js',
-        outputPath: 'js',
         typeOfAsset: 'js'
       }
     ]),
