@@ -4,12 +4,21 @@
     "module": "commonjs",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "sourceMap": true,
     "noEmitHelpers": true,
+    "pretty": true,
+    "sourceMap": true,
     "types": [
       "core-js",
       "node"
     ]
+  },
+  "exclude": [
+    "node_modules"
+  ],
+  "awesomeTypescriptLoaderOptions": {
+    "useWebpackText": true,
+    "forkChecker": true,
+    "useCache": true
   },
   "compileOnSave": false,
   "buildOnSave": false
