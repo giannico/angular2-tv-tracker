@@ -8,7 +8,6 @@ var ExtractTextPlugin = require('extract-text-webpack-plugin');
 var HtmlWebpackPlugin = require('html-webpack-plugin');
 var CopyWebpackPlugin = require('copy-webpack-plugin');
 var AddAssetHtmlPlugin = require('add-asset-html-webpack-plugin');
-var ForkCheckerPlugin = require('awesome-typescript-loader').ForkCheckerPlugin;
 
 var autoprefixer = require('autoprefixer');
 
@@ -90,7 +89,7 @@ function getWebpackConfig(options) {
       // register TypeScript and angular2-template-loader for inlining component templates/styles
       {
         test: /\.ts$/,
-        loaders: ['awesome-typescript-loader', 'angular2-template-loader'],
+        loaders: ['ts', 'angular2-template-loader'],
         exclude: [/\.(spec|e2e)\.ts$/, /node_modules\/(?!(ng2-.+))/]
       },
 
@@ -132,6 +131,13 @@ function getWebpackConfig(options) {
         loader: 'raw', exclude: root('src', 'public')
       }
     ]
+    // postLoaders: [
+    //   // run tslint on the application files after each rebuild
+    //   {
+    //     test: /\.ts$/,
+    //     loader: 'tslint'
+    //   }
+    // ]
   };
 
   config.plugins = [
@@ -158,9 +164,6 @@ function getWebpackConfig(options) {
       context: root(),
       manifest: require('./dist/polyfills.manifest.json'),
     }),
-
-    // forks a separate process for TypeScript checking and emitting (to improve performance)
-    new ForkCheckerPlugin(),
 
     // register the files from the DLL manifest, to be added to index.html as script/style tags
     new AddAssetHtmlPlugin([

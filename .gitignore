@@ -21,9 +21,8 @@ build/
 *.tmp
 *.bak
 *.swp
-.awcache
 
-# Editors
+#
 # ======================
 .vscode
 

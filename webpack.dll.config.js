@@ -82,7 +82,7 @@ function getWebpackConfig(options) {
       // register TypeScript and angular2-template-loader for inlining component templates/styles
       {
         test: /\.ts$/,
-        loaders: ['awesome-typescript-loader', 'angular2-template-loader'],
+        loaders: ['ts', 'angular2-template-loader'],
         exclude: [/\.(spec|e2e)\.ts$/, /node_modules\/(?!(ng2-.+))/]
       },
 
