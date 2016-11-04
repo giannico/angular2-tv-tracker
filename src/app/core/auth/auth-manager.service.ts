@@ -1,6 +1,8 @@
 import { Injectable, APP_INITIALIZER } from '@angular/core';
 import { AngularFire, FirebaseAuthState } from 'angularfire2';
 import { Observable } from 'rxjs/Observable';
+import 'rxjs/add/operator/take';
+import 'rxjs/add/operator/toPromise';
 
 import { AuthUser } from '../data';
 
