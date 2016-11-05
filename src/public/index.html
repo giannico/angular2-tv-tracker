@@ -6,9 +6,16 @@
 	  <link rel="icon" type="image/x-icon" href="/img/favicon.ico">
 
 	  <base href="/">
+
+		<!-- DLL values will be populated via template values passed into HtmlWebpackPlugin -->
+		<link href="<%= htmlWebpackPlugin.options.vendorCss %>" rel="stylesheet"></link>
+		<script type="text/javascript" src="<%= htmlWebpackPlugin.options.vendorJs %>"></script>
+		<script type="text/javascript" src="<%= htmlWebpackPlugin.options.polyfillsJs %>"></script>
+		<!-- HTML Webpack Plugin will also insert generated css here -->
   </head>
 
   <body>
   	<app>Loading...</app>
+		<!-- HTML Webpack Plugin will also insert generated js here -->
   </body>
 </html>

@@ -7,7 +7,6 @@ var AssetsPlugin = require('assets-webpack-plugin');
 var ExtractTextPlugin = require('extract-text-webpack-plugin');
 var HtmlWebpackPlugin = require('html-webpack-plugin');
 var CopyWebpackPlugin = require('copy-webpack-plugin');
-var AddAssetHtmlPlugin = require('add-asset-html-webpack-plugin');
 
 var autoprefixer = require('autoprefixer');
 
@@ -165,34 +164,12 @@ function getWebpackConfig(options) {
       manifest: require('./dist/polyfills.manifest.json'),
     }),
 
-    // register the files from the DLL manifest, to be added to index.html as script/style tags
-    new AddAssetHtmlPlugin([
-      {
-        filepath: root('dist', webpackDllAssets.vendor.css),
-        includeSourcemap: false,
-        publicPath: 'css',
-        outputPath: 'css',
-        typeOfAsset: 'css'
-      },
-      {
-        filepath: root('dist', webpackDllAssets.polyfills.js),
-        includeSourcemap: false,
-        publicPath: 'js',
-        outputPath: 'js',
-        typeOfAsset: 'js'
-      },
-      {
-        filepath: root('dist', webpackDllAssets.vendor.js),
-        includeSourcemap: false,
-        publicPath: 'js',
-        outputPath: 'js',
-        typeOfAsset: 'js'
-      }
-    ]),
-
     // inject the generated/registered scripts/css files into the index file (main and DLLs)
     new HtmlWebpackPlugin({
-      template: './src/public/index.html'
+      template: './src/public/index.html',
+      vendorJs: webpackDllAssets.vendor.js,
+      vendorCss: webpackDllAssets.vendor.css,
+      polyfillsJs: webpackDllAssets.polyfills.js
     }),
 
     // always minify the application code, in order to catch any minification issues during
